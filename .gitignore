@@ -1,0 +1,19 @@
+# build
+build/
+out/
+cmake-build-*/
+*.o
+*.obj
+*.exe
+*.pdb
+*.ilk
+bench
+a.out
+
+# editores / SO
+.vscode/
+.idea/
+.vs/
+*.swp
+.DS_Store
+Thumbs.db

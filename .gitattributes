@@ -1,0 +1,18 @@
+# Código-fonte: normaliza fim de linha
+*.c   text eol=lf
+*.h   text eol=lf
+*.md  text eol=lf
+*.py  text eol=lf
+*.sh  text eol=lf
+*.yml text eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# Dados brutos: o Git NÃO converte fim de linha (preserva o arquivo exatamente como foi gerado)
+dados/** -text
+
+# Binários
+*.mp4 binary
+*.mkv binary
+*.pdf binary
+*.png binary

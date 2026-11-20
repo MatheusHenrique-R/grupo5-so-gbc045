@@ -1,0 +1,74 @@
+# Release: ao criar uma tag v* (ex.: v1.0.0) na main, compila Linux e Windows,
+# roda os testes e publica os binários na aba "Releases" do GitHub.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.nome }})
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            nome: linux
+          - os: windows-latest
+            nome: windows
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compilar
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+
+      - name: Testes
+        run: ctest --test-dir build -C Release --output-on-failure --timeout 120
+
+      - name: Empacotar (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p pacote
+          cp build/bench build/test_* pacote/ 2>/dev/null || true
+          cp README.md pacote/
+          tar -czf gbc045-tema2-${{ github.ref_name }}-linux-x64.tar.gz -C pacote .
+
+      - name: Empacotar (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pacote | Out-Null
+          Copy-Item build/Release/*.exe pacote/
+          Copy-Item README.md pacote/
+          Compress-Archive -Path pacote/* -DestinationPath gbc045-tema2-${{ github.ref_name }}-windows-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pacote-${{ matrix.nome }}
+          path: gbc045-tema2-*
+
+  publicar:
+    name: Publicar Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: pacotes
+          merge-multiple: true
+
+      - name: Criar Release no GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" pacotes/* \
+            --title "Entrega ${{ github.ref_name }}" \
+            --generate-notes
