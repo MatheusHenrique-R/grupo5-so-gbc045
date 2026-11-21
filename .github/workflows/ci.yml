@@ -1,6 +1,10 @@
 # CI: compila e testa em Linux e Windows a cada push e Pull Request.
 # ATENÇÃO: os runners do GitHub são máquinas virtuais compartilhadas.
 # Servem para verificar CORREÇÃO, nunca para coletar os dados oficiais de desempenho.
+#
+# Os nomes dos jobs ("Regras do enunciado", "Build e testes (...)") são os
+# status checks exigidos na proteção das branches. Não renomeie sem atualizar
+# o ruleset no GitHub.
 name: CI
 
 on:
@@ -23,20 +27,48 @@ jobs:
             test -d "$d" || { echo "::error::pasta $d/ ausente"; exit 1; }
           done
           test -f README.md || { echo "::error::README.md ausente"; exit 1; }
+          test -f code/platform_thread.h || { echo "::error::code/platform_thread.h ausente (nome exigido pelo enunciado)"; exit 1; }
+          test -f code/platform_thread.c || { echo "::error::code/platform_thread.c ausente (nome exigido pelo enunciado)"; exit 1; }
           echo "OK: estrutura completa"
 
+      - name: Instalar MinGW-w64 (mesmo compilador do CLion no Windows)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq gcc-mingw-w64-x86-64
+
+      # A camada é um arquivo só (platform_thread.c) com #ifdef _WIN32, então não
+      # dá para procurar "#include <pthread.h>" no texto: o lado Linux PRECISA dele.
+      # Em vez disso, pré-processamos cada .c COMO SE FOSSE Windows (o MinGW
+      # define _WIN32) e listamos os headers realmente incluídos (-H).
       - name: Proibido winpthreads no código Windows
         run: |
-          # Verifica todo arquivo de code/ com "win" no nome (ex.: platform_thread_win32.c)
-          arquivos=$(find code -type f -iname '*win*.[ch]' 2>/dev/null)
-          if [ -z "$arquivos" ]; then
-            echo "Nenhum arquivo Windows em code/ ainda — verificação pulada"; exit 0
+          falhou=0
+          for f in code/*.c; do
+            if x86_64-w64-mingw32-gcc -std=c11 -E -H -Icode "$f" -o /dev/null 2>&1 \
+                 | grep -E '(/|\\)(pthread|semaphore)\.h$'; then
+              echo "::error file=$f::o lado Windows de $f inclui pthread.h/semaphore.h (winpthreads é proibido)"
+              falhou=1
+            fi
+          done
+          [ $falhou -eq 0 ] && echo "OK: nenhum header de pthreads no código compilado para Windows"
+          exit $falhou
+
+      # Compila os testes (e o bench, se existir) com MinGW e confere que nenhum
+      # executável depende da DLL do winpthreads.
+      - name: Compilação com MinGW + verificação de DLLs
+        run: |
+          LIB=$(ls code/*.c | grep -v '/bench\.c$')
+          mkdir -p mingw
+          for t in testes/test_*.c code/bench.c; do
+            [ -f "$t" ] || continue
+            n=$(basename "$t" .c)
+            x86_64-w64-mingw32-gcc -std=c11 -O2 -Wall -Wextra -Icode "$t" $LIB -o "mingw/$n.exe"
+            echo "== $n.exe importa:"; x86_64-w64-mingw32-objdump -p "mingw/$n.exe" | grep "DLL Name"
+          done
+          if x86_64-w64-mingw32-objdump -p mingw/*.exe | grep -i winpthread; then
+            echo "::error::executável depende de libwinpthread (proibido)"; exit 1
           fi
-          if grep -nE '^\s*#\s*include\s*[<"](pthread|semaphore)\.h' $arquivos; then
-            echo "::error::código Windows inclui pthread.h/semaphore.h (winpthreads é proibido)"
-            exit 1
-          fi
-          echo "OK: nenhum include de pthreads no código Windows"
+          echo "OK: nenhum executável usa winpthreads"
 
   build:
     name: Build e testes (${{ matrix.os }})
@@ -44,23 +76,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]   # Linux: GCC | Windows: MSVC
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sem CMakeLists.txt ainda
-        if: hashFiles('CMakeLists.txt') == ''
-        run: echo "Nenhum CMakeLists.txt na raiz — build pulado"
-
       - name: Configurar
-        if: hashFiles('CMakeLists.txt') != ''
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Compilar
-        if: hashFiles('CMakeLists.txt') != ''
         run: cmake --build build --config Release
 
+      # --no-tests=error: se o CMake não gerar nenhum teste (ex.: arquivo fora do
+      # padrão testes/test_*.c), o CI falha em vez de passar sem testar nada.
       - name: Testes
-        if: hashFiles('CMakeLists.txt') != ''
-        run: ctest --test-dir build -C Release --output-on-failure --timeout 120 --no-tests=ignore
+        run: ctest --test-dir build -C Release --output-on-failure --timeout 120 --no-tests=error
+
+      # Roda o benchmark com poucos itens nas 12 configurações só para garantir que
+      # ele executa e que o checksum fecha (o bench deve sair com código != 0 se não fechar).
+      # Pressupõe a interface: bench <so> <versao A|B> <P> <C> <buffer> <total> <rep>
+      # NÃO é coleta de dados. Só roda quando code/bench.c existir.
+      - name: Benchmark rápido (fumaça)
+        if: hashFiles('code/bench.c') != ''
+        shell: bash
+        run: |
+          B=build/bench; [ -x "$B" ] || B=build/Release/bench.exe
+          for v in A B; do for pc in 1 4; do for buf in 1 16 256; do
+            "$B" ci "$v" "$pc" "$pc" "$buf" 4000 1
+          done; done; done

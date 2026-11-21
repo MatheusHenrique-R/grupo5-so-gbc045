@@ -1,5 +1,10 @@
-# Release: ao criar uma tag v* (ex.: v1.0.0) na main, compila Linux e Windows,
-# roda os testes e publica os binários na aba "Releases" do GitHub.
+# Release: ao criar uma tag v* (ex.: v1.0.0) num commit da main, compila Linux e
+# Windows, roda os testes e publica na aba "Releases" do GitHub:
+#   - binários Linux (.tar.gz) e Windows (.zip)
+#   - dados brutos (dados/) e resultados (experimentos/), se já existirem
+#
+# Como gerar:   git checkout main && git pull
+#               git tag v1.0.0 -m "Entrega final" && git push origin v1.0.0
 name: Release
 
 on:
@@ -10,8 +15,25 @@ permissions:
   contents: write
 
 jobs:
+  origem:
+    name: Tag está na main?
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # histórico completo, para saber em quais branches o commit está
+      - name: Verificar
+        run: |
+          if git branch -r --contains "$GITHUB_SHA" | grep -qE '^\s*origin/main$'; then
+            echo "OK: a tag ${{ github.ref_name }} aponta para um commit da main"
+          else
+            echo "::error::a tag ${{ github.ref_name }} não está na main. Faça o merge develop → main e crie a tag lá."
+            exit 1
+          fi
+
   build:
     name: Build (${{ matrix.nome }})
+    needs: origem
     strategy:
       matrix:
         include:
@@ -29,14 +51,16 @@ jobs:
           cmake --build build --config Release
 
       - name: Testes
-        run: ctest --test-dir build -C Release --output-on-failure --timeout 120
+        run: ctest --test-dir build -C Release --output-on-failure --timeout 120 --no-tests=error
 
       - name: Empacotar (Linux)
         if: runner.os == 'Linux'
         run: |
           mkdir -p pacote
-          cp build/bench build/test_* pacote/ 2>/dev/null || true
+          # executáveis gerados (bench, se existir, e os testes)
+          find build -maxdepth 1 -type f -executable \( -name 'bench' -o -name 'test_*' \) -exec cp {} pacote/ \;
           cp README.md pacote/
+          ls pacote
           tar -czf gbc045-tema2-${{ github.ref_name }}-linux-x64.tar.gz -C pacote .
 
       - name: Empacotar (Windows)
@@ -46,6 +70,7 @@ jobs:
           New-Item -ItemType Directory -Force pacote | Out-Null
           Copy-Item build/Release/*.exe pacote/
           Copy-Item README.md pacote/
+          Get-ChildItem pacote
           Compress-Archive -Path pacote/* -DestinationPath gbc045-tema2-${{ github.ref_name }}-windows-x64.zip
 
       - uses: actions/upload-artifact@v4
@@ -64,6 +89,16 @@ jobs:
         with:
           path: pacotes
           merge-multiple: true
+
+      # Dados brutos + resultados num zip à parte, só se já houver algo além do .gitkeep
+      - name: Empacotar dados e resultados
+        run: |
+          if find dados experimentos -type f ! -name '.gitkeep' | grep -q .; then
+            zip -qr pacotes/gbc045-tema2-${{ github.ref_name }}-dados-e-resultados.zip dados experimentos -x '*.gitkeep'
+            echo "Dados e resultados incluídos"
+          else
+            echo "Ainda não há dados/resultados — pulando"
+          fi
 
       - name: Criar Release no GitHub
         env:
