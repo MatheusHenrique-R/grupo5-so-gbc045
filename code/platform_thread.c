@@ -78,6 +78,10 @@ int pt_cond_broadcast(pt_cond_t *c){
 int pt_cond_wait(pt_cond_t *c, pt_mutex_t *m){
     return SleepConditionVariableCS(c, m, INFINITE) ? 0 : -1;
 }
+int pt_cond_destroy(pt_cond_t *c){
+    (void)c;    // CONDITION_VARIABLE nao tem funcao de destruicao no Win32
+    return 0;
+}
 
 // Semáforo
 // O windows não tem um "sem_t". O semáforo é um objeto do kernel.
@@ -147,6 +151,9 @@ int pt_cond_broadcast(pt_cond_t *c){
 }
 int pt_cond_wait(pt_cond_t *c, pt_mutex_t *m){
     return pthread_cond_wait(c, m);
+}
+int pt_cond_destroy(pt_cond_t *c){
+    return pthread_cond_destroy(c);
 }
 
 // Semáforo
