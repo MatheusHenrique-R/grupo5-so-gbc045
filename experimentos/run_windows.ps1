@@ -65,7 +65,7 @@ $plano = (powercfg /getactivescheme) -join " "
 ) | Set-Content -Encoding ascii $amb
 
 # ---- Cabeçalhos ---------------------------------------------------------------
-"so,versao,prod,cons,buf,total,rep,tempo_s,vazao,checksum_ok,user_s,kernel_s" | Set-Content -Encoding ascii $raw
+"so,versao,prod,cons,buf,total,rep,tempo_s,vazao,checksum_ok" | Set-Content -Encoding ascii $raw
 "so,versao,rep,amostra,lat_ns" | Set-Content -Encoding ascii $lat
 
 # ---- As 12 configurações ------------------------------------------------------

@@ -59,7 +59,7 @@ mkdir -p dados
 } > "$AMB"
 
 # ---- Cabeçalhos ---------------------------------------------------------------
-echo "so,versao,prod,cons,buf,total,rep,tempo_s,vazao,checksum_ok,user_s,kernel_s" > "$RAW"
+echo "so,versao,prod,cons,buf,total,rep,tempo_s,vazao,checksum_ok" > "$RAW"
 echo "so,versao,rep,amostra,lat_ns" > "$LAT"
 
 # ---- As 12 configurações: versão × (P×C) × buffer ------------------------------

@@ -15,7 +15,7 @@
  *        bench windows B 1 1 1 400000 3 dados\windows_latencia.csv
  *
  * Saída (stdout): UMA linha CSV, sem cabeçalho (o script escreve o cabeçalho):
- *   so,versao,prod,cons,buf,total,rep,tempo_s,vazao,checksum_ok,user_s,kernel_s
+ *   so,versao,prod,cons,buf,total,rep,tempo_s,vazao,checksum_ok
  *
  * Latência (só se arq_latencia for passado E a configuração for 1×1 com
  * buffer 1, como pede o enunciado): acrescenta linhas no arquivo
@@ -27,10 +27,10 @@
  * FLUXO DO main():
  *   1. lê e valida os argumentos
  *   2. inicializa o buffer da versão escolhida
- *   3. lê relógio e tempo de CPU  ─┐
+ *   3. lê o relógio (pt_now_ns)   ─┐
  *   4. cria C consumidores e P produtores
  *   5. espera todos terminarem (join)        │ intervalo medido
- *   6. lê relógio e tempo de CPU  ─┘
+ *   6. lê o relógio (pt_now_ns)   ─┘
  *   7. confere o checksum, imprime a linha CSV e grava as latências
  */
 #include <stdio.h>
@@ -201,8 +201,8 @@ int main(int argc, char **argv)
     }
 
     /* ---------------- 3–6. intervalo medido ---------------- */
-    double u0, k0, u1, k1;
-    pt_cpu_times(&u0, &k0);
+    /* O tempo é medido SÓ com pt_now_ns() da camada de abstração:
+     * Windows → QueryPerformanceCounter | Linux → clock_gettime(CLOCK_MONOTONIC). */
     uint64_t t0 = pt_now_ns();
 
     /* Consumidores primeiro: eles já ficam esperando itens. A ordem não
@@ -220,7 +220,6 @@ int main(int argc, char **argv)
     for (uint64_t i = 0; i < C; i++) pt_thread_join(tc[i]);
 
     uint64_t t1 = pt_now_ns();
-    pt_cpu_times(&u1, &k1);
 
     /* ---------------- 7. resultados ---------------- */
 
@@ -237,9 +236,9 @@ int main(int argc, char **argv)
     double vazao   = (double)total / tempo_s;      /* itens por segundo */
 
     printf("%s,%s,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64
-           ",%.6f,%.0f,%d,%.6f,%.6f\n",
+           ",%.6f,%.0f,%d\n",
            so, (versao == VERSAO_A) ? "A" : "B", P, C, cap, total, rep,
-           tempo_s, vazao, checksum_ok, u1 - u0, k1 - k0);
+           tempo_s, vazao, checksum_ok);
     fflush(stdout);
 
     if (mede_lat) {
