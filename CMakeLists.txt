@@ -30,7 +30,6 @@ add_library(ptlib STATIC ${FONTES_LIB})
 target_include_directories(ptlib PUBLIC code)
 
 if(NOT WIN32)
-    # pthreads só no Linux/FreeBSD.
     find_package(Threads REQUIRED)
     target_link_libraries(ptlib PUBLIC Threads::Threads)
 endif()

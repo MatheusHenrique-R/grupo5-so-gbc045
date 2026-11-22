@@ -40,6 +40,7 @@ int pt_cond_init(pt_cond_t *c);
 int pt_cond_wait(pt_cond_t *c, pt_mutex_t *m);
 int pt_cond_signal(pt_cond_t *c);
 int pt_cond_broadcast(pt_cond_t *c);
+int pt_cond_destroy(pt_cond_t *c);
 
 // Semáforo
 int pt_sem_init(pt_sem_t *s, unsigned initial, unsigned max);
