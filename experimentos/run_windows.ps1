@@ -85,8 +85,9 @@ foreach ($v in "A", "B") {
 $inicio = Get-Date
 for ($rep = 1; $rep -le $Reps; $rep++) {
     # Get-Random -Count N sobre a lista inteira = embaralhar (funciona no PS 5.1)
-    $ordem = $configs | Get-Random -Count $configs.Count
-    foreach ($cfg in $ordem) {
+    $ordem = 0..($configs.Count - 1) | Get-Random -Count $configs.Count
+    foreach ($i in $ordem) {
+	$cfg = $configs[$i]
         $linha = & $Bench $So $cfg[0] $cfg[1] $cfg[2] $cfg[3] $Total $rep $lat
         if ($LASTEXITCODE -ne 0) {
             throw "ERRO na execucao: $($cfg -join ' ') rep $rep (checksum ou falha)"

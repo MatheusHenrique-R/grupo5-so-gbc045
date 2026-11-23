@@ -1,5 +1,5 @@
-#ifndef TRABALHO_PLATFORM_THREAD_H
-#define TRABALHO_PLATFORM_THREAD_H
+#ifndef PLATFORM_THREAD_H
+#define PLATFORM_THREAD_H
 
 #include <stdint.h>
 
@@ -51,4 +51,4 @@ int pt_sem_destroy(pt_sem_t *s);
 // Tempo
 uint64_t pt_now_ns(void);
 
-#endif //TRABALHO_PLATFORM_THREAD_H
+#endif //PLATFORM_THREAD_H

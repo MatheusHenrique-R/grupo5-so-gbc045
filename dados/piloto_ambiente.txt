@@ -1,0 +1,8 @@
+data: 2026-11-22T21:25:06.8545417-03:00
+sistema: Microsoft Windows 11 Pro versao 10.0.26300 build 26300
+cpu: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz | nucleos 6 | logicos 12
+memoria_GB: 15.8
+fabricante/modelo: GIGABYTE / G5 MD   (VM aparece aqui: VirtualBox, VMware...)
+plano_energia: GUID do Esquema de Energia: 381b4222-f694-41f0-9685-ff5bb260df2e  (Equilibrado)
+bench: build\bench.exe
+parametros: Total=20000 Reps=2
