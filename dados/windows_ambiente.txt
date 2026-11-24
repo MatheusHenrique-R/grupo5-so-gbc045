@@ -1,0 +1,8 @@
+data: 2026-11-24T23:36:26.7887206-03:00
+sistema: Microsoft Windows 11 Home Single Language versao 10.0.26200 build 26200
+cpu: Intel(R) Core(TM) i3-1005G1 CPU @ 1.20GHz | nucleos 2 | logicos 4
+memoria_GB: 7.8
+fabricante/modelo: Acer / Aspire A315-56   (VM aparece aqui: VirtualBox, VMware...)
+plano_energia: Power Scheme GUID: 381b4222-f694-41f0-9685-ff5bb260df2e  (Balanced)
+bench: build\bench.exe
+parametros: Total=400000 Reps=30
