@@ -4,14 +4,14 @@
  * Toda operação segue o mesmo roteiro:
  *
  *   1. trava o mutex                    exclusão mútua sobre buf, in, out, count
- *   2. ENQUANTO a condição não permite  espera na variável de condição
+ *   2. Enquanto a condição não permite  espera na variável de condição
  *      (pt_cond_wait libera o mutex enquanto dorme e o retoma ao acordar)
  *   3. faz a operação e atualiza count
- *   4. sinaliza a OUTRA condição        → acorda quem pode ter sido destravado
+ *   4. sinaliza a outra condição        → acorda quem pode ter sido destravado
  *   5. destrava o mutex
  *
  * Aqui o estado "cheio/vazio" é uma variável comum (count) protegida pelo
- * mutex. As variáveis de condição NÃO guardam estado: são só filas de espera.
+ * mutex. As variáveis de condição não guardam estado: são só filas de espera.
  */
 
 #include "buffer.h"

@@ -2,7 +2,7 @@
  * test_bench.c — testa o programa de benchmark (bench) "por fora"
  * ============================================================================
  * O bench tem o seu próprio main(), então não dá para chamá-lo como função.
- * Este teste EXECUTA o bench como outro processo (igual aos scripts de coleta
+ * Este teste executa o bench como outro processo (igual aos scripts de coleta
  * fazem), lê o que ele imprimiu e confere o código de saída.
  *
  * Como recebe o caminho do bench:
@@ -52,9 +52,7 @@ static char bench[1024];            /* caminho do executável do bench */
 static int roda_bench(const char *args, char *saida, size_t tam)
 {
     char cmd[2048];
-    /* Aspas no caminho (pode ter espaços: "Drive - Ciência ..."). No Windows,
-     * o _popen passa a linha para "cmd /c", que remove o PRIMEIRO e o ÚLTIMO
-     * caractere de aspas; por isso a linha inteira vai entre aspas extras. */
+
 #ifdef _WIN32
     snprintf(cmd, sizeof cmd, "\"\"%s\" %s%s\"", bench, args, SEM_STDERR);
 #else

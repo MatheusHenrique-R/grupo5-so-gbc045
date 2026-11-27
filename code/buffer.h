@@ -5,7 +5,7 @@
  *   2) sincronização condicional: produtor espera se o buffer está CHEIO,
  *      consumidor espera se está VAZIO.
  *
- * BUFFER CIRCULAR com cap = 4
+ * Buffer circular com cap = 4
  *
  *        out           in
  *         ↓            ↓
@@ -22,11 +22,11 @@
  *
 */
 
-#ifndef GBC045_TEMA2_BUFFER_H
-#define GBC045_TEMA2_BUFFER_H
+#ifndef BUFFER_H
+#define BUFFER_H
 
 #include <stdint.h>
-#include "./platform_thread.h"
+#include "platform_thread.h"
 
 typedef enum { VERSAO_A = 0, VERSAO_B = 1 } versao_t;
 
@@ -73,4 +73,4 @@ void   bufb_put(buffer_t *b, item_t it);
 item_t bufb_get(buffer_t *b);
 void   bufb_destroy(buffer_t *b);
 
-#endif //GBC045_TEMA2_BUFFER_H
+#endif //BUFFER_H
