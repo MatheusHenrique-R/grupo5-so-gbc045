@@ -24,7 +24,7 @@
  *
  * Código de saída: 0 = ok; 1 = argumentos inválidos/erro; 2 = checksum falhou.
  *
- * FLUXO DO main():
+ * Fluxo do main():
  *   1. lê e valida os argumentos
  *   2. inicializa o buffer da versão escolhida
  *   3. lê o relógio (pt_now_ns)   ─┐
@@ -86,7 +86,7 @@ static void *consumidor(void *p)
 {
     arg_consumidor_t *a = (arg_consumidor_t *)p;
 
-    /* Soma numa variável LOCAL e só escreve em a->soma no final. Se
+    /* Soma numa variável local e só escreve em a->soma no final. Se
      * somássemos direto em a->soma, as structs dos consumidores (vizinhas
      * no vetor) poderiam cair na mesma linha de cache e as threads ficariam
      * "brigando" pela linha a cada item ("false sharing"), distorcendo a medida. */
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    /* CRITÉRIO DE TÉRMINO (exigido pelo enunciado): cada produtor produz
+    /*Critério de termíno (exigido pelo enunciado): cada produtor produz
      * exatamente total/P itens e cada consumidor consome exatamente total/C.
      * Como a soma das duas é igual a total, todo item produzido é consumido
      * e toda espera termina — nenhuma thread fica bloqueada para sempre.
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
         ac[i].n_lat = 0;
         ac[i].lat = NULL;
         if (mede_lat) {
-            /* Alocado ANTES de começar a medir: malloc dentro do laço medido
+            /* Alocado antes de começar a medir: malloc dentro do laço medido
              * atrapalharia o tempo. */
             ac[i].lat = (uint64_t *)malloc(sizeof(uint64_t) * (size_t)(total / C / AMOSTRA_LAT + 1));
             if (!ac[i].lat) { fprintf(stderr, "sem memoria\n"); return 1; }

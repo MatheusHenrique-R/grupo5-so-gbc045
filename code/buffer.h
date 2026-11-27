@@ -5,7 +5,7 @@
  *   2) sincronização condicional: produtor espera se o buffer está CHEIO,
  *      consumidor espera se está VAZIO.
  *
- * BUFFER CIRCULAR com cap = 4
+ * Buffer circular com cap = 4
  *
  *        out           in
  *         ↓            ↓
